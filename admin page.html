@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Orders</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:'Segoe UI',Arial,sans-serif;
+    }
+
+    body{
+      background:#f4f7fb;
+      color:#0f172a;
+      padding:20px;
+    }
+
+    header{
+      max-width:1200px;
+      margin:0 auto 25px;
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      color:white;
+      padding:25px;
+      border-radius:20px;
+      box-shadow:0 10px 25px rgba(37,99,235,.25);
+    }
+
+    header h1{
+      font-size:34px;
+      margin-bottom:6px;
+    }
+
+    .summary{
+      max-width:1200px;
+      margin:0 auto 20px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:15px;
+    }
+
+    .summary-card{
+      background:white;
+      padding:18px;
+      border-radius:16px;
+      box-shadow:0 6px 18px rgba(15,23,42,.08);
+      border:1px solid #e2e8f0;
+    }
+
+    .summary-card h3{
+      color:#64748b;
+      font-size:14px;
+      margin-bottom:8px;
+    }
+
+    .summary-card p{
+      font-size:26px;
+      font-weight:800;
+      color:#1d4ed8;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:auto;
+      background:white;
+      padding:20px;
+      border-radius:20px;
+      box-shadow:0 8px 25px rgba(15,23,42,.08);
+      border:1px solid #e2e8f0;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    input,select{
+      padding:11px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      outline:none;
+    }
+
+    input:focus,select:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    th,td{
+      text-align:left;
+      padding:14px 10px;
+      border-bottom:1px solid #e2e8f0;
+      vertical-align:top;
+    }
+
+    th{
+      background:#eff6ff;
+      color:#0f2f73;
+      font-size:14px;
+    }
+
+    .order-id{
+      font-weight:800;
+      color:#1d4ed8;
+    }
+
+    .items{
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .status{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      display:inline-block;
+      margin-bottom:8px;
+    }
+
+    .Pending{background:#fef3c7;color:#92400e;}
+    .Paid{background:#dcfce7;color:#166534;}
+    .Completed{background:#dbeafe;color:#1e40af;}
+    .Cancelled{background:#fee2e2;color:#991b1b;}
+
+    button{
+      border:none;
+      border-radius:10px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:700;
+      margin:2px;
+    }
+
+    .btn-paid{background:#22c55e;color:white;}
+    .btn-completed{background:#2563eb;color:white;}
+    .btn-cancel{background:#ef4444;color:white;}
+    .btn-delete{background:#111827;color:white;}
+
+    .empty{
+      text-align:center;
+      padding:30px;
+      color:#64748b;
+    }
+
+    @media(max-width:850px){
+      table,thead,tbody,th,td,tr{display:block;}
+      thead{display:none;}
+      tr{
+        margin-bottom:16px;
+        border:1px solid #e2e8f0;
+        border-radius:14px;
+        padding:10px;
+      }
+      td{
+        border-bottom:none;
+        padding:8px;
+      }
+      td::before{
+        content:attr(data-label);
+        display:block;
+        font-weight:800;
+        color:#0f2f73;
+        margin-bottom:4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Order Panel</h1>
+  <p>View and manage customer drink orders</p>
+</header>
+
+<section class="summary">
+  <div class="summary-card">
+    <h3>Total Orders</h3>
+    <p id="totalOrders">0</p>
+  </div>
+  <div class="summary-card">
+    <h3>Pending</h3>
+    <p id="pendingOrders">0</p>
+  </div>
+  <div class="summary-card">
+    <h3>Paid</h3>
+    <p id="paidOrders">0</p>
+  </div>
+  <div class="summary-card">
+    <h3>Total Sales</h3>
+    <p>RM <span id="totalSales">0.00</span></p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="toolbar">
+    <h2>Orders</h2>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search name, phone, order ID" oninput="renderOrders()">
+      <select id="statusFilter" onchange="renderOrders()">
+        <option value="All">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Paid">Paid</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="ordersBox"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCACHI01DQ7Hgmxzhx3674rcxPbURzcg_4",
+    authDomain: "technosk-9f133.firebaseapp.com",
+    projectId: "technosk-9f133",
+    storageBucket: "technosk-9f133.firebasestorage.app",
+    messagingSenderId: "761581422349",
+    appId: "1:761581422349:web:0ff53c97f02a11617e5244",
+    measurementId: "G-8366LSL4TD"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let orders = [];
+
+  const q = query(collection(db,"drinkOrders"), orderBy("createdAt","desc"));
+
+  onSnapshot(q, snapshot => {
+    orders = snapshot.docs.map(docSnap => ({
+      firebaseId: docSnap.id,
+      ...docSnap.data()
+    }));
+
+    renderOrders();
+  }, error => {
+    console.error(error);
+    document.getElementById("ordersBox").innerHTML = `
+      <div class="empty">
+        Failed to load orders.<br>
+        Please check Firestore Rules and collection name.
+      </div>
+    `;
+  });
+
+  window.renderOrders = function(){
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const filter = document.getElementById("statusFilter").value;
+
+    let filtered = orders.filter(order => {
+      const text = `${order.orderId || ""} ${order.customerName || ""} ${order.phone || ""}`.toLowerCase();
+      const matchSearch = text.includes(search);
+      const matchStatus = filter === "All" || order.status === filter;
+      return matchSearch && matchStatus;
+    });
+
+    updateSummary();
+
+    const box = document.getElementById("ordersBox");
+
+    if(filtered.length === 0){
+      box.innerHTML = `<div class="empty">No orders found.</div>`;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Payment</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    filtered.forEach(order => {
+      const itemText = (order.items || []).map(item => {
+        return `${item.name} x ${item.quantity} = RM ${Number(item.subtotal || 0).toFixed(2)}`;
+      }).join("<br>");
+
+      html += `
+        <tr>
+          <td data-label="Order">
+            <div class="order-id">${order.orderId || "-"}</div>
+            <small>${formatDate(order.createdAt)}</small>
+          </td>
+          <td data-label="Customer">
+            <strong>${order.customerName || "-"}</strong><br>
+            <small>${order.phone || "-"}</small>
+          </td>
+          <td data-label="Items" class="items">${itemText || "-"}</td>
+          <td data-label="Payment">
+            <strong>${order.paymentMethod || "-"}</strong><br>
+            <small>${order.paymentReference || "-"}</small>
+          </td>
+          <td data-label="Total"><strong>RM ${Number(order.total || 0).toFixed(2)}</strong></td>
+          <td data-label="Status"><span class="status ${order.status || "Pending"}">${order.status || "Pending"}</span></td>
+          <td data-label="Action">
+            <button class="btn-paid" onclick="updateStatus('${order.firebaseId}','Paid')">Paid</button>
+            <button class="btn-completed" onclick="updateStatus('${order.firebaseId}','Completed')">Completed</button>
+            <button class="btn-cancel" onclick="updateStatus('${order.firebaseId}','Cancelled')">Cancel</button>
+            <button class="btn-delete" onclick="deleteOrder('${order.firebaseId}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    box.innerHTML = html;
+  }
+
+  function updateSummary(){
+    document.getElementById("totalOrders").innerText = orders.length;
+    document.getElementById("pendingOrders").innerText = orders.filter(o => (o.status || "Pending") === "Pending").length;
+    document.getElementById("paidOrders").innerText = orders.filter(o => o.status === "Paid").length;
+
+    const totalSales = orders
+      .filter(o => o.status !== "Cancelled")
+      .reduce((sum,o) => sum + Number(o.total || 0), 0);
+
+    document.getElementById("totalSales").innerText = totalSales.toFixed(2);
+  }
+
+  function formatDate(timestamp){
+    if(!timestamp || !timestamp.toDate) return "-";
+    return timestamp.toDate().toLocaleString();
+  }
+
+  window.updateStatus = async function(id,status){
+    try{
+      await updateDoc(doc(db,"drinkOrders",id), { status });
+    }catch(error){
+      console.error(error);
+      alert("Failed to update status.");
+    }
+  }
+
+  window.deleteOrder = async function(id){
+    if(!confirm("Delete this order?")) return;
+
+    try{
+      await deleteDoc(doc(db,"drinkOrders",id));
+    }catch(error){
+      console.error(error);
+      alert("Failed to delete order.");
+    }
+  }
+</script>
+
+</body>
+</html>
