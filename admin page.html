@@ -121,10 +121,6 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-
-  // Change this to your real admin Gmail.
-  const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL@gmail.com";
-
   let orders = [];
   let unsubscribeOrders = null;
 
@@ -146,16 +142,11 @@
   }
 
   onAuthStateChanged(auth, user => {
-    if(user && user.email === ADMIN_EMAIL){
+    if(user){
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("adminPanel").style.display = "block";
       loadOrders();
-    }else{
-      if(user && user.email !== ADMIN_EMAIL){
-        alert("This account is not allowed to access admin page.");
-        signOut(auth);
-      }
-      document.getElementById("loginBox").style.display = "block";
+    }else{      document.getElementById("loginBox").style.display = "block";
       document.getElementById("adminPanel").style.display = "none";
       if(unsubscribeOrders) unsubscribeOrders();
     }
