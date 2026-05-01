@@ -123,7 +123,7 @@
   const db = getFirestore(app);
 
   // Change this to your real admin Gmail.
-  const ADMIN_EMAIL = "jackychoong0406@gmail.com";
+  const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL@gmail.com";
 
   let orders = [];
   let unsubscribeOrders = null;
@@ -235,6 +235,54 @@
     try{await deleteDoc(doc(db,"drinkOrders",id));}
     catch(error){console.error(error);alert("Failed to delete order.");}
   }
+    // WhatsApp
+    const whatsappNumber = "601151100889";
+
+    function openWhatsApp(orderId, total){
+      const itemsText = cart.map(i => `${i.name} x${i.qty}`).join('%0A');
+      const msg = `New Order:%0AOrder ID: ${orderId}%0AName: ${document.getElementById("name").value}%0APhone: ${document.getElementById("phone").value}%0AItems:%0A${itemsText}%0ATotal: RM ${total}%0APayment: ${paymentMethod}`;
+      const url = `https://wa.me/${whatsappNumber}?text=${msg}`;
+      window.open(url, '_blank');
+    }
+
+    // Override submitOrder to include WhatsApp
+    window.submitOrder = async function(){
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const ref = document.getElementById("ref").value.trim();
+
+      if(cart.length === 0){alert("Cart is empty.");return;}
+      if(!name || !phone){alert("Please enter your name and phone number.");return;}
+      if(paymentMethod === "TNG" && !ref){alert("Enter TNG reference");return;}
+
+      const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+      const orderId = "ORD"+Date.now();
+
+      try{
+        await addDoc(collection(db,"drinkOrders"),{
+          orderId,
+          customerName:name,
+          phone,
+          paymentMethod,
+          paymentReference: paymentMethod==="TNG"?ref:"Cash",
+          items:cart,
+          total,
+          status:"Pending",
+          createdAt: serverTimestamp()
+        });
+
+        document.getElementById("success").style.display="block";
+        document.getElementById("success").innerHTML=`Order Success<br>ID:${orderId}<br>Total RM ${total}<br><br><button onclick="openWhatsApp('${orderId}','${total}')" style="padding:10px 14px;background:#25D366;color:white;border:none;border-radius:8px;cursor:pointer;">Send via WhatsApp</button>`;
+
+        cart=[];
+        updateCart();
+
+      }catch(e){
+        alert("Failed to save order");
+        console.error(e);
+      }
+    }
+
 </script>
 
 </body>
