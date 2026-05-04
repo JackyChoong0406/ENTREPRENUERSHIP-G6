@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drink Order Page</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:'Segoe UI',Arial,sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      background:linear-gradient(135deg,#f8fbff,#eef6ff);
+      color:#0f172a;
+    }
+
+    .top-banner{
+      background:linear-gradient(90deg,#dff3ff,#ffffff,#dff3ff);
+      padding:26px 20px;
+      text-align:center;
+      border-bottom:1px solid #dbeafe;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .top-banner h1{
+      font-size:42px;
+      color:#0f2f73;
+      letter-spacing:.5px;
+    }
+
+    .top-banner p{
+      margin-top:8px;
+      color:#475569;
+      font-size:17px;
+    }
+
+    .wrap{
+      max-width:1250px;
+      margin:26px auto;
+      padding:0 18px;
+      display:grid;
+      grid-template-columns:1.6fr 1fr;
+      gap:28px;
+      align-items:start;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+    }
+
+    .section-title span{
+      background:#2563eb;
+      color:white;
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+    }
+
+    .section-title h2{
+      color:#102a69;
+      font-size:26px;
+    }
+
+    .product-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(240px,1fr));
+      gap:24px;
+    }
+
+    .product-card{
+      background:#ffffff;
+      border-radius:22px;
+      padding:22px;
+      box-shadow:0 12px 30px rgba(15,23,42,.08);
+      border:1px solid #e2e8f0;
+      transition:.2s;
+      display:flex;
+      flex-direction:column;
+      min-height:460px;
+    }
+
+    .product-card:hover{
+      transform:translateY(-4px);
+      box-shadow:0 18px 36px rgba(37,99,235,.16);
+    }
+
+    .product-card img{
+      width:100%;
+      height:240px;
+      object-fit:contain;
+      margin:18px 0;
+      filter:drop-shadow(0 10px 12px rgba(0,0,0,.14));
+    }
+
+    .product-info{
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+
+    .product-info h3{
+      font-size:35px;
+      color:#0f2f73;
+      margin-bottom:10px;
+      min-height:58px;
+    }
+
+    .desc{
+      color:#64748b;
+      line-height:1.5;
+      margin-bottom:18px;
+      min-height:50px;
+    }
+
+    .product-bottom{
+      margin-top:auto;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      align-items:center;
+    }
+
+    .price{
+      font-size:24px;
+      font-weight:800;
+      color:#2563eb;
+      margin-bottom:0;
+    }
+
+    .add-btn,.main-btn{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      padding:14px 16px;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+      color:white;
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      box-shadow:0 8px 18px rgba(37,99,235,.25);
+      transition:.2s;
+    }
+
+    .add-btn:hover,.main-btn:hover{
+      opacity:.92;
+      transform:translateY(-1px);
+    }
+
+    .green-btn{
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      box-shadow:0 8px 18px rgba(22,163,74,.25);
+    }
+
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      position:sticky;
+      top:16px;
+    }
+
+    .panel{
+      background:#ffffff;
+      border:1px solid #dbeafe;
+      border-radius:22px;
+      padding:20px;
+      box-shadow:0 12px 30px rgba(15,23,42,.08);
+    }
+
+    .panel h2{
+      color:#0f2f73;
+      font-size:24px;
+      margin-bottom:16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .cart-empty{
+      color:#94a3b8;
+      padding:12px 0;
+    }
+
+    .cart-item{
+      display:grid;
+      grid-template-columns:70px 1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:14px 0;
+      border-bottom:1px solid #e2e8f0;
+    }
+
+    .cart-item img{
+      width:62px;
+      height:62px;
+      object-fit:contain;
+      background:#f8fafc;
+      border-radius:12px;
+      border:1px solid #e2e8f0;
+    }
+
+    .cart-item h4{
+      color:#0f2f73;
+      font-size:15px;
+    }
+
+    .cart-item small{
+      color:#64748b;
+    }
+
+    .qty-row{
+      margin-top:8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .qty-btn{
+      width:30px;
+      height:30px;
+      border:none;
+      border-radius:8px;
+      background:#eff6ff;
+      color:#1d4ed8;
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .remove-btn{
+      border:none;
+      background:#fee2e2;
+      color:#dc2626;
+      border-radius:10px;
+      padding:9px 11px;
+      cursor:pointer;
+      font-weight:800;
+    }
+
+    .cart-price{
+      text-align:right;
+      font-weight:800;
+      color:#0f2f73;
+      margin-bottom:10px;
+    }
+
+    .total-line{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin:18px 0;
+      font-size:20px;
+      font-weight:800;
+      color:#0f2f73;
+    }
+
+    input,select{
+      width:100%;
+      padding:14px;
+      margin-bottom:12px;
+      border:1px solid #cbd5e1;
+      border-radius:12px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
+    }
+
+    input:focus,select:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .payment-options{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .pay-card{
+      border:1.5px solid #cbd5e1;
+      border-radius:14px;
+      padding:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition:.2s;
+      font-weight:700;
+      color:#0f2f73;
+    }
+
+    .pay-card.active{
+      border-color:#2563eb;
+      background:#eff6ff;
+      box-shadow:0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .pay-card img{
+      width:42px;
+      height:42px;
+      object-fit:contain;
+    }
+
+    .qr-box{
+      display:none;
+      text-align:center;
+      border:2px solid #fb7185;
+      background:linear-gradient(135deg,#fff1f2,#ffffff);
+      border-radius:18px;
+      padding:18px;
+      margin:12px 0;
+    }
+
+    .qr-box img{
+      width:330px;
+      max-width:100%;
+      height:auto;
+      border-radius:12px;
+      background:white;
+      box-shadow:0 10px 22px rgba(244,63,94,.20);
+    }
+
+    .qr-box p{
+      color:#475569;
+      margin-top:10px;
+      font-size:14px;
+    }
+
+    .success{
+      display:none;
+      margin-top:14px;
+      background:#dcfce7;
+      color:#166534;
+      border-radius:14px;
+      padding:14px;
+      text-align:center;
+      font-weight:800;
+      line-height:1.6;
+    }
+
+    .cart-pop{
+      animation:cartPop .45s ease;
+    }
+
+    @keyframes cartPop{
+      0%{transform:scale(1);}
+      50%{transform:scale(1.04);}
+      100%{transform:scale(1);}
+    }
+
+    .add-toast{
+      position:fixed;
+      top:20px;
+      right:20px;
+      background:#22c55e;
+      color:white;
+      padding:14px 18px;
+      border-radius:14px;
+      font-weight:800;
+      box-shadow:0 10px 25px rgba(34,197,94,.3);
+      opacity:0;
+      transform:translateY(-20px);
+      pointer-events:none;
+      z-index:999;
+    }
+
+    .add-toast.show{
+      animation:toastShow 1.2s ease;
+    }
+
+    @keyframes toastShow{
+      0%{opacity:0;transform:translateY(-20px);}
+      20%{opacity:1;transform:translateY(0);}
+      80%{opacity:1;transform:translateY(0);}
+      100%{opacity:0;transform:translateY(-20px);}
+    }
+
+    .info-strip{
+      margin-top:32px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+
+    .info-box{
+      background:white;
+      border-radius:18px;
+      border:1px solid #e2e8f0;
+      padding:18px;
+      box-shadow:0 8px 20px rgba(15,23,42,.06);
+    }
+
+    .info-box strong{
+      color:#0f2f73;
+      display:block;
+      margin-bottom:4px;
+    }
+
+    .info-box span{
+      color:#64748b;
+      font-size:14px;
+    }
+
+    footer{
+      text-align:center;
+      padding:22px;
+      color:#64748b;
+    }
+
+    @media(max-width:950px){
+      .wrap{grid-template-columns:1fr;}
+      .side{position:static;}
+      .product-grid{grid-template-columns:1fr;}
+    }
+
+    @media(max-width:560px){
+      body{background:#f8fbff;}
+      .top-banner h1{font-size:32px;}
+      .wrap{padding:0 12px;margin:18px auto;}
+      .product-card{text-align:center;}
+      .product-card img{height:260px;}
+      .product-bottom{grid-template-columns:1fr;}
+      .payment-options{grid-template-columns:1fr;}
+      .cart-item{grid-template-columns:56px 1fr;}
+      .cart-price,.remove-btn{grid-column:2;justify-self:start;text-align:left;}
+      .qr-box img{width:360px;}
+      .info-strip{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="add-toast" id="addToast">Added to cart ✅</div>
+
+  <div class="top-banner">
+    <h1>🥤 Drink Order</h1>
+    <p>Select your drinks and place your order</p>
+  </div>
+
+  <main class="wrap">
+    <section>
+      <div class="section-title">
+        <span>🛍️</span>
+        <h2>Our Drinks</h2>
+      </div>
+
+      <div class="product-grid" id="products"></div>
+
+      <div class="info-strip">
+        <div class="info-box">
+          <strong>Refreshing</strong>
+          <span>Stay hydrated anytime.</span>
+        </div>
+        <div class="info-box">
+          <strong>Fast & Easy</strong>
+          <span>Order in just a few clicks.</span>
+        </div>
+        <div class="info-box">
+          <strong>Simple Payment</strong>
+          <span>Pay by TNG QR or cash.</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="panel">
+        <h2>🛒 Your Cart</h2>
+        <div id="cart"></div>
+        <div class="total-line">
+          <span>Total</span>
+          <span>RM <span id="total">0.00</span></span>
+        </div>
+        <button class="main-btn" onclick="showCheckout()">Confirm Order</button>
+      </div>
+
+      <div class="panel" id="checkout">
+        <h2>👤 Customer Information</h2>
+
+        <input id="name" placeholder="Full Name">
+        <input id="phone" placeholder="Phone Number">
+
+        <h2 style="font-size:20px;margin-top:8px;">💳 Payment Method</h2>
+        <div class="payment-options">
+          <div class="pay-card active" id="tngCard" onclick="selectPayment('TNG')">
+            <img src="tng-logo.png" onerror="this.style.display='none'">
+            <span>TNG QR</span>
+          </div>
+          <div class="pay-card" id="cashCard" onclick="selectPayment('Cash')">
+            <span style="font-size:28px;">💵</span>
+            <span>Pay by Cash</span>
+          </div>
+        </div>
+
+        <div class="qr-box" id="qrBox">
+          <img src="tng-qr.png" alt="TNG QR Code">
+          <p>Open this page on your phone or scan this QR code using your TNG eWallet.</p>
+        </div>
+
+        <input id="ref" placeholder="Payment reference / Transaction ID">
+
+        <button class="main-btn green-btn" onclick="submitOrder()">Submit Order</button>
+        <div class="success" id="success"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>Thank you for your order 💙</footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCACHI01DQ7Hgmxzhx3674rcxPbURzcg_4",
+      authDomain: "technosk-9f133.firebaseapp.com",
+      projectId: "technosk-9f133",
+      storageBucket: "technosk-9f133.firebasestorage.app",
+      messagingSenderId: "761581422349",
+      appId: "1:761581422349:web:0ff53c97f02a11617e5244",
+      measurementId: "G-8366LSL4TD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const products = [
+      {
+        id: 1,
+        name: "100 Plus",
+        price: 2.00,
+        image: "100plus.png",
+        desc: "Refreshing isotonic drink to keep you energized."
+      },
+      {
+        id: 2,
+        name: "Yeo's Lychee Box Drink",
+        price: 2.00,
+        image: "yeos.png",
+        desc: "Delicious lychee flavoured box drink."
+      },
+      {
+        id: 3,
+        name: "Drinho Blackcurrant",
+        price: 2.00,
+        image: "drinho.png",
+        desc: "Sweet and refreshing blackcurrant juice drink."
+      },
+      {
+        id: 4,
+        name: "500ml Mineral Water",
+        price: 1.00,
+        image: "water.png",
+        desc: "Pure and refreshing mineral water for everyday hydration."
+      }
+    ];
+
+    let cart = [];
+    let paymentMethod = "TNG";
+
+    window.loadProducts = function(){
+      const box = document.getElementById("products");
+      box.innerHTML = "";
+
+      products.forEach(item => {
+        box.innerHTML += `
+          <div class="product-card">
+            <div class="product-info">
+              <h3>${item.name}</h3>
+              <img src="${item.image}" alt="${item.name}">
+              <p class="desc">${item.desc}</p>
+              <div class="product-bottom">
+                <div class="price">RM ${item.price.toFixed(2)}</div>
+                <button class="add-btn" onclick="addToCart(${item.id})">🛒 Add to Cart</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    window.addToCart = function(id){
+      const existing = cart.find(item => item.id === id);
+      if(existing){
+        existing.qty++;
+      }else{
+        const product = products.find(item => item.id === id);
+        cart.push({...product, qty:1});
+      }
+      updateCart();
+      showAddAnimation();
+    }
+
+    function showAddAnimation(){
+      const cartPanel = document.querySelector(".side .panel");
+      const toast = document.getElementById("addToast");
+
+      cartPanel.classList.remove("cart-pop");
+      void cartPanel.offsetWidth;
+      cartPanel.classList.add("cart-pop");
+
+      toast.classList.remove("show");
+      void toast.offsetWidth;
+      toast.classList.add("show");
+    }
+
+    window.changeQty = function(id, amount){
+      const item = cart.find(item => item.id === id);
+      if(!item) return;
+      item.qty += amount;
+      if(item.qty <= 0){
+        removeItem(id);
+      }else{
+        updateCart();
+      }
+    }
+
+    window.removeItem = function(id){
+      cart = cart.filter(item => item.id !== id);
+      updateCart();
+    }
+
+    function updateCart(){
+      const cartBox = document.getElementById("cart");
+      const totalBox = document.getElementById("total");
+      cartBox.innerHTML = "";
+
+      if(cart.length === 0){
+        cartBox.innerHTML = `<p class="cart-empty">Your cart is empty.</p>`;
+        totalBox.innerText = "0.00";
+        return;
+      }
+
+      let total = 0;
+      cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+
+        cartBox.innerHTML += `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}">
+            <div>
+              <h4>${item.name}</h4>
+              <small>RM ${item.price.toFixed(2)} x ${item.qty}</small>
+              <div class="qty-row">
+                <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+                <strong>${item.qty}</strong>
+                <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+              </div>
+            </div>
+            <div>
+              <div class="cart-price">RM ${subtotal.toFixed(2)}</div>
+              <button class="remove-btn" onclick="removeItem(${item.id})">🗑</button>
+            </div>
+          </div>
+        `;
+      });
+
+      totalBox.innerText = total.toFixed(2);
+    }
+
+    window.showCheckout = function(){
+      if(cart.length === 0){
+        alert("Please add item to cart first.");
+        return;
+      }
+      document.getElementById("checkout").scrollIntoView({behavior:"smooth"});
+    }
+
+    window.selectPayment = function(method){
+      paymentMethod = method;
+      document.getElementById("tngCard").classList.toggle("active", method === "TNG");
+      document.getElementById("cashCard").classList.toggle("active", method === "Cash");
+      document.getElementById("qrBox").style.display = method === "TNG" ? "block" : "none";
+      document.getElementById("ref").style.display = method === "TNG" ? "block" : "none";
+    }
+
+    window.submitOrder = async function(){
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const ref = document.getElementById("ref").value.trim();
+
+      if(cart.length === 0){
+        alert("Cart is empty.");
+        return;
+      }
+
+      if(!name || !phone){
+        alert("Please enter your name and phone number.");
+        return;
+      }
+
+      if(paymentMethod === "TNG" && !ref){
+        alert("Please enter your TNG payment reference / transaction ID.");
+        return;
+      }
+
+      const total = cart.reduce((sum,item) => sum + item.price * item.qty, 0);
+      const orderId = "ORD" + Date.now();
+
+      const orderData = {
+        orderId,
+        customerName: name,
+        phone,
+        paymentMethod,
+        paymentReference: paymentMethod === "TNG" ? ref : "Cash Payment",
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.qty,
+          subtotal: item.price * item.qty
+        })),
+        total,
+        status: "Pending",
+        createdAt: serverTimestamp()
+      };
+
+      try{
+        await addDoc(collection(db,"drinkOrders"), orderData);
+
+        document.getElementById("success").style.display = "block";
+        document.getElementById("success").innerHTML = `
+          Order submitted successfully!<br>
+          Order ID: ${orderId}<br>
+          Total: RM ${total.toFixed(2)}
+        `;
+
+        cart = [];
+        updateCart();
+        document.getElementById("name").value = "";
+        document.getElementById("phone").value = "";
+        document.getElementById("ref").value = "";
+      }catch(error){
+        console.error(error);
+        alert("Order failed to save to Firebase. Please check Firestore rules or internet connection.");
+      }
+    }
+
+    loadProducts();
+    updateCart();
+    selectPayment("TNG");
+  </script>
+
+</body>
+</html>
