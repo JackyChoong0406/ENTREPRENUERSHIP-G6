@@ -135,15 +135,17 @@ async function finish() {
                 s[levelId] = score;
             }
 
-            let currentUnlocked = Number(s.unlockedLevel || 1);
+            let currentUnlocked = Number(d.unlockedLevel || 1);
+let newUnlocked = currentUnlocked;
 
-            if (score >= minGoal && currentUnlocked === Number(levelId)) {
-                s.unlockedLevel = Number(levelId) + 1;
-            }
+if (score >= minGoal && currentUnlocked === levelId) {
+    newUnlocked = levelId + 1;
+}
 
-            await updateDoc(userRef, { 
-                scores: s
-            });
+await updateDoc(userRef, {
+    scores: s,
+    unlockedLevel: newUnlocked
+});
         }
 
     } catch (e) { 
