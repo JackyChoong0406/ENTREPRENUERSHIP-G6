@@ -45,7 +45,11 @@ const auth = getAuth(app);
 let currentUser = null;
 let isSaving = false;
 
+let authChecked = false;
+
 onAuthStateChanged(auth, (user) => {
+  authChecked = true;
+
   if (user) {
     currentUser = user;
   } else {
