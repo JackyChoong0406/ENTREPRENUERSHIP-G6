@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Hub</title>
+
+<style>
+:root { --primary:#38bdf8; --bg:#0f172a; --panel:#1e293b; --success:#22c55e; --danger:#ff375f; }
+
+body {
+    font-family:'Segoe UI';
+    background:var(--bg);
+    color:white;
+    text-align:center;
+    margin:0;
+}
+
+.header {
+    padding:20px;
+    background:var(--panel);
+    display:flex;
+    justify-content:space-around;
+}
+
+.card {
+    background:var(--panel);
+    padding:20px;
+    border-radius:12px;
+    margin:20px auto;
+    width:300px;
+}
+
+input {
+    padding:10px;
+    margin:10px;
+    width:80%;
+    border-radius:8px;
+    border:none;
+}
+
+button {
+    padding:10px 20px;
+    background:var(--primary);
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:disabled {
+    opacity:0.4;
+    cursor:not-allowed;
+}
+
+.level {
+    background:#1e293b;
+    padding:15px;
+    margin:10px;
+    border-radius:10px;
+    cursor:pointer;
+}
+.locked { opacity:0.3; }
+
+.setup-wrapper {
+    display:flex;
+    justify-content:center;
+    gap:35px;
+    align-items:flex-start;
+    margin-top:20px;
+    flex-wrap:wrap;
+}
+
+.mode-box {
+    background:#111827;
+    border:1px solid #334155;
+    border-radius:12px;
+    padding:20px;
+    width:420px;
+}
+
+.game-grid {
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:15px;
+}
+
+.select-card {
+    background:#1e293b;
+    border:2px solid #334155;
+    border-radius:10px;
+    padding:15px;
+    cursor:pointer;
+    text-align:left;
+    transition:0.2s;
+    position:relative;
+}
+
+.select-card:hover {
+    transform:scale(1.03);
+}
+
+.select-card.selected {
+    border-color:var(--success);
+    background:#123524;
+}
+
+.select-card.disabled {
+    opacity:0.3;
+    pointer-events:none;
+}
+
+.level-number {
+    position:absolute;
+    top:8px;
+    right:10px;
+    background:var(--success);
+    color:black;
+    font-size:12px;
+    font-weight:bold;
+    padding:3px 7px;
+    border-radius:20px;
+}
+
+.badge {
+    display:inline-block;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:5px;
+    background:#16a34a;
+    margin-top:5px;
+}
+
+.warning {
+    color:var(--danger);
+    margin:15px;
+}
+
+.confirm-btn {
+    margin-top:25px;
+    width:300px;
+    background:var(--success);
+    font-weight:bold;
+}
+
+h2 span {
+    color:var(--primary);
+}
+</style>
+</head>
+
+<body>
+
+<div id="loginBox" class="card">
+    <h2>Anonymous Register</h2>
+    <input id="username" placeholder="Write your username"><br>
+    <button onclick="register()">Register / Continue</button>
+</div>
+
+<div id="app" style="display:none;">
+    <div class="header">
+        <div>User: <span id="user"></span></div>
+        <div>Credits: <span id="credits">0</span></div>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+        <input id="code" placeholder="Enter Voucher">
+        <button onclick="redeem()">Redeem</button>
+    </div>
+
+    <div id="setupBox" style="display:none;">
+        <h1>Setup Your Mission</h1>
+        <p>Select <b>2 Easy Games only</b>. Order of clicking determines level number.</p>
+        <p class="warning">⚠ WARNING: This selection is permanent and cannot be changed after confirmation.</p>
+
+        <div class="setup-wrapper">
+            <div class="mode-box">
+                <h2><span>Easy Mode</span><br>Choose 2 Games Only</h2>
+                <h3 style="color:#38bdf8;">Each selected game costs 50 credits</h3>
+                <div class="game-grid" id="easyGames"></div>
+            </div>
+        </div>
+
+        <button id="confirmBtn" class="confirm-btn" onclick="confirmSelection()" disabled>
+            Confirm Permanent Selection
+        </button>
+    </div>
+
+    <div id="games"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCohQ4ZZgA83n-zniwqDiO8NcW-py72evg",
+    authDomain: "technosk2-32cd0.firebaseapp.com",
+    projectId: "technosk2-32cd0",
+    storageBucket: "technosk2-32cd0.firebasestorage.app",
+    messagingSenderId: "492215285095",
+    appId: "1:492215285095:web:d1955b18f747d6480e2bc2",
+    measurementId: "G-KF6CTR9N3J"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const easyGamesList = [
+    { name:"Snake", file:"snake.html", difficulty:"easy", cost:50 },
+    { name:"Gold Miner", file:"miner.html", difficulty:"easy", cost:50 },
+    { name:"Brick Breaker", file:"ball.html", difficulty:"easy", cost:50 },
+    { name:"1024 Game", file:"1024mg.html", difficulty:"easy", cost:50 },
+    { name:"One Stroke", file:"graph_theory.html", difficulty:"easy", cost:50 },
+    { name:"Fishing", file:"fishing.html", difficulty:"easy", cost:50 }
+];
+
+let selectedEasyLevels = [];
+let finalGames = [];
+let pendingUsername = "";
+
+window.register = async () => {
+    const username = document.getElementById("username").value.trim();
+
+    if(username === ""){
+        alert("Please write your username first.");
+        return;
+    }
+
+    pendingUsername = username;
+
+    try {
+        await signInAnonymously(auth);
+    } catch(err) {
+        alert(err.message);
+    }
+};
+
+window.login = window.register;
+window.logout = () => signOut(auth);
+
+async function getNextAnonymousName(){
+    const counterRef = doc(db, "counters", "anonymousUsers");
+
+    const nextNumber = await runTransaction(db, async (transaction) => {
+        const counterSnap = await transaction.get(counterRef);
+        let current = 0;
+
+        if(counterSnap.exists()){
+            current = counterSnap.data().current || 0;
+        }
+
+        const next = current + 1;
+        transaction.set(counterRef, { current: next }, { merge:true });
+        return next;
+    });
+
+    return "Anonymous " + nextNumber;
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if(user){
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("app").style.display = "block";
+
+        const ref = doc(db,"users",user.uid);
+        const snap = await getDoc(ref);
+
+        let data;
+
+        if(!snap.exists()){
+            const anonymousName = await getNextAnonymousName();
+
+            data = {
+                username: pendingUsername || "Player",
+                anonymousName: anonymousName,
+                displayName: anonymousName + " - " + (pendingUsername || "Player"),
+                isAnonymous:true,
+                credits:0,
+                unlockedLevel:1,
+                scores:{},
+                missionSetup:false,
+                selectedGames:[],
+                playMode:"easyOnly",
+                purchasedUltimate:false
+            };
+
+            await setDoc(ref,data);
+        } else {
+            data = snap.data();
+
+            const updateData = {};
+
+            if(data.isAnonymous === undefined){
+                updateData.isAnonymous = true;
+                data.isAnonymous = true;
+            }
+
+            if(data.anonymousName === undefined){
+                const anonymousName = await getNextAnonymousName();
+                updateData.anonymousName = anonymousName;
+                data.anonymousName = anonymousName;
+            }
+
+            if(data.username === undefined){
+                updateData.username = pendingUsername || "Player";
+                data.username = pendingUsername || "Player";
+            }
+
+            if(data.displayName === undefined){
+                updateData.displayName = data.anonymousName + " - " + data.username;
+                data.displayName = data.anonymousName + " - " + data.username;
+            }
+
+            if(data.purchasedUltimate === undefined){
+                updateData.purchasedUltimate = false;
+                data.purchasedUltimate = false;
+            }
+
+            if(Object.keys(updateData).length > 0){
+                await updateDoc(ref, updateData);
+            }
+        }
+
+        document.getElementById("user").innerText = data.displayName || data.anonymousName || data.username || "Anonymous";
+        document.getElementById("credits").innerText = data.credits;
+
+        if(!data.missionSetup){
+            document.getElementById("setupBox").style.display = "block";
+            document.getElementById("games").style.display = "none";
+            renderSelection();
+        } else {
+            finalGames = data.selectedGames || [];
+            document.getElementById("setupBox").style.display = "none";
+            document.getElementById("games").style.display = "block";
+            renderGames(data);
+        }
+
+    } else {
+        document.getElementById("loginBox").style.display = "block";
+        document.getElementById("app").style.display = "none";
+    }
+});
+
+window.redeem = async () => {
+    const code = document.getElementById("code").value;
+
+    const coupRef = doc(db,"coupons",code);
+    const snap = await getDoc(coupRef);
+
+    if(!snap.exists()){
+        alert("Invalid Code");
+        return;
+    }
+
+    const amount = snap.data().amount;
+
+    const userRef = doc(db,"users",auth.currentUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    await updateDoc(userRef,{
+        credits: userSnap.data().credits + amount
+    });
+
+    await deleteDoc(coupRef);
+
+    alert("Success!");
+    location.reload();
+};
+
+function renderSelection(){
+    const easyBox = document.getElementById("easyGames");
+    easyBox.innerHTML = "";
+
+    easyGamesList.forEach(game => {
+        easyBox.appendChild(createEasyCard(game));
+    });
+
+    updateSelectionUI();
+}
+
+function createEasyCard(game){
+    const div = document.createElement("div");
+    div.className = "select-card easy-card";
+    div.innerHTML = `
+        <h3>${game.name}</h3>
+        <p>Cost: ${game.cost} credits</p>
+        <span class="badge">EASY</span>
+    `;
+
+    div.onclick = () => {
+        const index = selectedEasyLevels.findIndex(g => g.name === game.name);
+
+        if(index >= 0){
+            selectedEasyLevels.splice(index,1);
+            updateSelectionUI();
+            return;
+        }
+
+        if(selectedEasyLevels.length >= 2){
+            alert("You can only choose 2 Easy games.");
+            return;
+        }
+
+        selectedEasyLevels.push(game);
+        updateSelectionUI();
+    };
+
+    return div;
+}
+
+function updateSelectionUI(){
+    const easyCards = document.querySelectorAll(".easy-card");
+
+    easyCards.forEach(card => {
+        const name = card.querySelector("h3").innerText;
+        const selectedIndex = selectedEasyLevels.findIndex(g => g.name === name);
+
+        card.classList.toggle("selected", selectedIndex >= 0);
+
+        let oldLabel = card.querySelector(".level-number");
+        if(oldLabel){
+            oldLabel.remove();
+        }
+
+        if(selectedIndex >= 0){
+            const label = document.createElement("div");
+            label.className = "level-number";
+            label.innerText = "Lv " + (selectedIndex + 1);
+            card.appendChild(label);
+        }
+    });
+
+    const confirmBtn = document.getElementById("confirmBtn");
+    confirmBtn.disabled = selectedEasyLevels.length !== 2;
+}
+
+window.confirmSelection = async () => {
+    const selectedGames = selectedEasyLevels.map((g,index) => ({
+        id:index + 1,
+        name:g.name,
+        file:g.file,
+        cost:50,
+        min:100
+    }));
+
+    if(selectedGames.length !== 2){
+        alert("Please select exactly 2 Easy games.");
+        return;
+    }
+
+    const confirmMsg = confirm("Confirm selection? This cannot be changed later.");
+
+    if(!confirmMsg){
+        return;
+    }
+
+    const userRef = doc(db,"users",auth.currentUser.uid);
+
+    await updateDoc(userRef,{
+        missionSetup:true,
+        playMode:"easyOnly",
+        selectedGames:selectedGames,
+        unlockedLevel:1
+    });
+
+    alert("Mission setup completed!");
+    location.reload();
+};
+
+function renderGames(data){
+    const container = document.getElementById("games");
+    container.innerHTML = "";
+
+    const selectedGames = data.selectedGames || [];
+
+    selectedGames.forEach(g => {
+        const locked = g.id > data.unlockedLevel;
+
+        const div = document.createElement("div");
+        div.className = "level " + (locked ? "locked" : "");
+        div.innerHTML = `
+            <h3>Level ${g.id}: ${g.name}</h3>
+            <p>Cost: ${g.cost} credits</p>
+            <p>${locked ? "Locked" : "Play Now"}</p>
+        `;
+
+        if(!locked){
+            div.onclick = async () => {
+                const userRef = doc(db,"users",auth.currentUser.uid);
+
+                if(data.credits < g.cost){
+                    alert("Not enough credits");
+                    return;
+                }
+
+                await updateDoc(userRef, {
+                    credits: data.credits - g.cost
+                });
+
+                window.location.href =
+                    `${g.file}?uid=${auth.currentUser.uid}&id=${g.id}&min=${g.min}`;
+            };
+        }
+
+        container.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
