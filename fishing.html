@@ -23,7 +23,81 @@
 
 <canvas id="gameCanvas" width="1400" height="800"></canvas>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCohQ4ZZgA83n-zniwqDiO8NcW-py72evg",
+  authDomain: "technosk2-32cd0.firebaseapp.com",
+  projectId: "technosk2-32cd0",
+  storageBucket: "technosk2-32cd0.firebasestorage.app",
+  messagingSenderId: "492215285095",
+  appId: "1:492215285095:web:d1955b18f747d6480e2bc2",
+  measurementId: "G-KF6CTR9N3J"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUser = null;
+let isSaving = false;
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+  } else {
+    alert("Not logged in!");
+    window.location.href = "Index.html";
+  }
+});
+
+const params = new URLSearchParams(window.location.search);
+const levelId = params.get("id");
+const minGoal = parseInt(params.get("min")) || 50;
+
+async function finish() {
+  if (isSaving) return;
+  isSaving = true;
+
+  if (!currentUser || !levelId) {
+    window.location.href = "Index.html";
+    return;
+  }
+
+  try {
+    const userRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(userRef);
+
+    if (snap.exists()) {
+      let d = snap.data();
+      let s = d.scores || {};
+
+      if (!s[levelId] || score > s[levelId]) {
+        s[levelId] = score;
+      }
+
+      let currentUnlocked = Number(d.unlockedLevel || 1);
+      let newUnlocked = currentUnlocked;
+
+      if (score >= minGoal && currentUnlocked === Number(levelId)) {
+        newUnlocked = Number(levelId) + 1;
+      }
+
+      await updateDoc(userRef, {
+        scores: s,
+        unlockedLevel: newUnlocked
+      });
+    }
+  } catch (e) {
+    console.error("Firebase Error:", e);
+  }
+
+  window.location.href = "Index.html";
+}
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -755,6 +829,7 @@ function gameLoop() {
 
   if ((remaining <= 0 || lives <= 0) && !gameOver) {
     gameOver = true;
+    finish();
   }
 
   if (!gameOver) {
@@ -838,6 +913,7 @@ function gameLoop() {
   ctx.fillText(`Score: ${score}`, 10, 30);
   ctx.fillText(`Time: ${remaining}`, 10, 60);
   ctx.fillText(`Lives: ${lives}`, 10, 90);
+  ctx.fillText(`Goal: ${minGoal}`, 10, 120);
 
   if (frozen) {
     drawCenteredText("FROZEN!", 120, 45, "#a8f0ff");
@@ -875,7 +951,7 @@ function gameLoop() {
 
     drawCenteredText("GAME OVER", 280, 60);
     drawCenteredText(`Final Score: ${score}`, 360, 36);
-    drawCenteredText("Press R to Restart", 440, 30);
+    drawCenteredText("Saving progress...", 440, 30);
   }
 
   requestAnimationFrame(gameLoop);
@@ -894,10 +970,6 @@ document.addEventListener("keydown", function(event) {
     if (!gameOver) {
       if (event.code === "Space" && !hookDropped && !reeling) {
         hookDropped = true;
-      }
-    } else {
-      if (event.key.toLowerCase() === "r") {
-        resetGame();
       }
     }
   }
