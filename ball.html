@@ -597,13 +597,17 @@
                     s[levelId] = pendingScore;
                 }
 
-                let unlocked = Number(s.unlockedLevel || 1);
-
-                if (pendingScore >= minGoal && unlocked === Number(levelId)) {
-                    s.unlockedLevel = Number(levelId) + 1;
+                let currentUnlocked = Number(d.unlockedLevel || 1);
+                let newUnlocked = currentUnlocked;
+                
+                if (score >= minGoal && currentUnlocked === levelId) {
+                    newUnlocked = levelId + 1;
                 }
-
-                await updateDoc(ref, { scores: s });
+                
+                await updateDoc(userRef, {
+                    scores: s,
+                    unlockedLevel: newUnlocked
+                });
             }
         } catch (e) {
             console.error("Firebase Error:", e);
